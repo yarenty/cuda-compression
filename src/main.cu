@@ -10,8 +10,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lzss.h"
-
+#include "getopt.h"
 #include "lzss.cpp"
+#include "lzss_dipperstein.cpp"
+#include "lzss_okumura.cpp"
+
+
+
 static const int WORK_SIZE = 256;
 FILE *infile, *outfile;
 
@@ -96,6 +101,102 @@ int main_cuda(void) {
  fclose(infile);  fclose(outfile);
  return EXIT_SUCCESS;
  }
+
+
+
+
+ int opt;
+FILE *inFile, *outFile; /
+MODES mode;
+inFile = NULL; outFile = NULL;
+mode = ENCODE;
+while ((opt = getopt(argc, argv, "cdtni:o:h?")) != -1)
+{
+switch(opt)
+{
+case ’c’: // compression mode
+mode = ENCODE; break;
+case ’d’: // decompression mode
+mode = DECODE; break;
+case ’i’: // input file name
+if (inFile != NULL) {
+allowed.\n");
+fprintf(stderr , "Multiple input files not
+fclose(inFile);
+if (outFile != NULL)
+{
+fclose(outFile);
+}
+exit(EXIT_FAILURE); }
+else if ((inFile = fopen(optarg, "rb")) == NULL) {
+perror("Opening inFile");
+if (outFile != NULL) {
+fclose(outFile); }
+
+exit(EXIT_FAILURE);
+} break;
+case ’o’: // output file name
+if (outFile != NULL) {
+allowed.\n");
+fprintf(stderr , "Multiple output files not
+fclose(outFile);
+if (inFile != NULL) {
+fclose(inFile); }
+exit(EXIT_FAILURE);
+}
+else if ((outFile = fopen(optarg, "wb")) == NULL)
+{
+perror("Opening outFile");
+if (outFile != NULL)
+{
+fclose(inFile);
+}
+exit(EXIT_FAILURE); }
+break;
+case ’h’: case ’?’:
+printf("Usage: lzss <options >\n\n"); printf("options:\n");
+file.\n");
+printf(" -c : Encode input file to output
+printf(" -d : Decode input file to output
+file.\n");
+printf(" -i <filename> : Name of input file.\n");
+printf(" -o <filename> : Name of output file.\n"); printf(" -h | ? : Print out command line
+options.\n\n");
+printf("Default: lzss -c\n");
+}
+return(EXIT_SUCCESS);
+}
+//validate command line
+if (inFile == NULL)
+{
+fprintf(stderr , "Input file must be provided\n");
+fprintf(stderr , "Enter \"lzss -?\" for help.\n");
+if (outFile != NULL)
+{
+fclose(outFile); }
+exit (EXIT_FAILURE);
+}
+else if (outFile == NULL)
+{
+fprintf(stderr , "Output file must be provided\n");
+fprintf(stderr , "Enter \"lzss -?\" for help.\n");
+if (inFile != NULL) {
+fclose(inFile); }
+exit (EXIT_FAILURE);
+}
+// we have valid parameters encode or decode
+if (mode == ENCODE)
+{
+EncodeLZSS(inFile , outFile);
+}
+else
+{
+DecodeLZSS(inFile , outFile);
+}
+fclose(inFile); fclose(outFile);
+return EXIT_SUCCESS; }
+
+
  */
 
 /**
@@ -127,13 +228,16 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	DefaultLZSS defaultLZSS;
+
+	//DefaultLZSS lzss;
+	//OkumuraLZSS lzss;
+	DippersteinLZSS lzss;
 	//LZSS *lzss = &defaultLZSS;
 
 	if (enc)
-		defaultLZSS.encode(infile, outfile);
+		lzss.encode(infile, outfile);
 	else
-		defaultLZSS.decode(infile, outfile);
+		lzss.decode(infile, outfile);
 	fclose(infile);
 	fclose(outfile);
 	printf("time: %.2f \n", (double) (clock() - time) / CLOCKS_PER_SEC);
